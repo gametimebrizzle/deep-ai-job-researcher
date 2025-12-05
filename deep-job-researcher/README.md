@@ -16,7 +16,9 @@ A production-ready Next.js app that matches your resume or portfolio with live j
 
 ## Setup
 
-1. **Get an API key** at [hyperbrowser.ai](https://hyperbrowser.ai)
+1. **Get API keys**:
+   - **Hyperbrowser API key** at [hyperbrowser.ai](https://hyperbrowser.ai) (required for web scraping)
+   - **OpenAI API key** at [platform.openai.com](https://platform.openai.com/api-keys) (required for AI-powered candidate analysis and job matching)
 
 2. **Clone and install**:
    ```bash
@@ -26,9 +28,10 @@ A production-ready Next.js app that matches your resume or portfolio with live j
    ```
 
 3. **Environment setup**:
+   Create a `.env.local` file in the project root with:
    ```bash
-   cp .env.example .env.local
-   # Add your API keys to .env.local
+   HYPERBROWSER_API_KEY=your_hyperbrowser_api_key_here
+   OPENAI_API_KEY=sk_your_openai_api_key_here
    ```
 
 4. **Quick start**:
