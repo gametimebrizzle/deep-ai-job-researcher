@@ -41,15 +41,21 @@ sudo mkdir -p /var/log/pm2
 sudo chown -R $USER:$USER /var/log/pm2
 
 echo -e "${YELLOW}Step 5: Deploying application code...${NC}"
-echo "Please upload your application code to: $APP_DIR"
-echo "You can use: scp, rsync, or git clone"
-echo ""
-echo "Example with rsync:"
-echo "  rsync -avz --exclude 'node_modules' --exclude '.next' ./ user@45.90.109.196:$APP_DIR/"
-echo ""
-read -p "Press Enter once you've uploaded the code..."
 
-cd $APP_DIR
+# Check if directory exists and has content
+if [ -d "$APP_DIR/.git" ]; then
+    echo "Git repository already exists, pulling latest changes..."
+    cd $APP_DIR
+    git pull origin master || git pull origin main
+elif [ -d "$APP_DIR" ] && [ "$(ls -A $APP_DIR)" ]; then
+    echo "Directory exists with content. Skipping clone."
+    cd $APP_DIR
+else
+    echo "Cloning repository from GitHub..."
+    sudo git clone https://github.com/gametimebrizzle/deep-ai-job-researcher.git $APP_DIR
+    sudo chown -R $USER:$USER $APP_DIR
+    cd $APP_DIR
+fi
 
 echo -e "${GREEN}Step 6: Installing Node.js dependencies...${NC}"
 npm install
@@ -83,10 +89,10 @@ sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@jbre
 }
 
 echo -e "${GREEN}Step 13: Starting application with PM2...${NC}"
-# Update the ecosystem config with actual path
-sed -i "s|/path/to/ai-assited-job-researcher|$APP_DIR|g" deployment/ecosystem.config.js
+# Create local PM2 config from template (this file is git-ignored)
+sed "s|__APP_DIR__|$APP_DIR|g" deployment/ecosystem.config.js > ecosystem.config.local.js
 
-pm2 start deployment/ecosystem.config.js
+pm2 start ecosystem.config.local.js
 pm2 save
 pm2 startup
 

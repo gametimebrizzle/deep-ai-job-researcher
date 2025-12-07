@@ -26,10 +26,10 @@ Before deployment, ensure you have:
 ```bash
 # On your local machine, upload code to VPS
 rsync -avz --exclude 'node_modules' --exclude '.next' \
-  ./ user@45.90.109.196:/var/www/resume-hunter/
+  ./ therealgametime@45.90.109.196:/var/www/resume-hunter/
 
 # SSH into VPS
-ssh user@45.90.109.196
+ssh therealgametime@45.90.109.196
 
 # Run deployment script
 cd /var/www/resume-hunter
@@ -60,6 +60,27 @@ sudo npm install -g pm2
 
 #### 2. Deploy Application
 
+**Option A: Using Git (Recommended)**
+
+```bash
+# Clone repository
+sudo git clone https://github.com/gametimebrizzle/deep-ai-job-researcher.git /var/www/resume-hunter
+
+# Set ownership
+sudo chown -R $USER:$USER /var/www/resume-hunter
+
+# Navigate to app directory
+cd /var/www/resume-hunter
+
+# Install dependencies
+npm install
+
+# Build production app
+npm run build
+```
+
+**Option B: Using Rsync**
+
 ```bash
 # Create app directory
 sudo mkdir -p /var/www/resume-hunter
@@ -67,7 +88,7 @@ sudo chown -R $USER:$USER /var/www/resume-hunter
 
 # Upload code (from local machine)
 rsync -avz --exclude 'node_modules' --exclude '.next' \
-  ./ user@45.90.109.196:/var/www/resume-hunter/
+  ./ therealgametime@45.90.109.196:/var/www/resume-hunter/
 
 # SSH to VPS and navigate to app
 cd /var/www/resume-hunter
@@ -126,16 +147,16 @@ sudo certbot --nginx -d resume-hunter.jbresearch-llc.com
 #### 6. Start Application with PM2
 
 ```bash
-# Update ecosystem config path
-sed -i "s|/path/to/ai-assited-job-researcher|/var/www/resume-hunter|g" \
-  deployment/ecosystem.config.js
-
 # Create log directory
 sudo mkdir -p /var/log/pm2
 sudo chown -R $USER:$USER /var/log/pm2
 
+# Generate local PM2 config from template (git-ignored)
+sed "s|__APP_DIR__|/var/www/resume-hunter|g" \
+  deployment/ecosystem.config.js > ecosystem.config.local.js
+
 # Start app
-pm2 start deployment/ecosystem.config.js
+pm2 start ecosystem.config.local.js
 
 # Save PM2 process list
 pm2 save
@@ -144,6 +165,8 @@ pm2 save
 pm2 startup
 # Copy and run the command it outputs
 ```
+
+**Note:** The `ecosystem.config.js` is a template file. The deployment creates `ecosystem.config.local.js` with the actual paths, which is git-ignored to keep deployments idempotent.
 
 ## Verification
 
@@ -171,24 +194,45 @@ pm2 startup
 
 ## Updating the Application
 
-```bash
-# SSH to VPS
-ssh user@45.90.109.196
+### Using Git (Recommended)
 
-# Navigate to app directory
+```bash
+# 1. On local machine: Commit and push changes
+git add .
+git commit -m "Your update message"
+git push origin master
+
+# 2. SSH to VPS
+ssh therealgametime@45.90.109.196
+
+# 3. Navigate to app directory
 cd /var/www/resume-hunter
 
-# Pull latest code (or upload with rsync)
-git pull  # if using git
-# OR from local: rsync -avz ./ user@45.90.109.196:/var/www/resume-hunter/
+# 4. Pull latest code
+git pull origin master
 
-# Install any new dependencies
+# 5. Install any new dependencies
 npm install
 
-# Rebuild app
+# 6. Rebuild app
 npm run build
 
-# Restart PM2
+# 7. Restart PM2
+pm2 restart resume-hunter
+```
+
+### Using Rsync (Alternative)
+
+```bash
+# From local machine
+rsync -avz --exclude 'node_modules' --exclude '.next' --exclude '.git' \
+  ./ therealgametime@45.90.109.196:/var/www/resume-hunter/
+
+# Then SSH and rebuild
+ssh therealgametime@45.90.109.196
+cd /var/www/resume-hunter
+npm install
+npm run build
 pm2 restart resume-hunter
 ```
 
