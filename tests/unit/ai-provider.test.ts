@@ -41,35 +41,33 @@ describe('detectProvider', () => {
   describe('unauthenticated user', () => {
     const authContext = { isAuthenticated: false };
 
-    it('should return "google" even if OPENAI_API_KEY is set', () => {
+    it('should return "openai" if OPENAI_API_KEY is set', () => {
       process.env.OPENAI_API_KEY = 'test-key';
       process.env.ANTHROPIC_API_KEY = 'test-key';
       process.env.GOOGLE_AI_API_KEY = 'test-key';
-      expect(detectProvider(authContext)).toBe('google');
+      expect(detectProvider(authContext)).toBe('openai');
     });
 
-    it('should return "google" even if ANTHROPIC_API_KEY is set', () => {
+    it('should error if OPENAI_API_KEY is not set but ANTHROPIC_API_KEY is set', () => {
         delete process.env.OPENAI_API_KEY;
         process.env.ANTHROPIC_API_KEY = 'test-key';
         process.env.GOOGLE_AI_API_KEY = 'test-key';
-        expect(detectProvider(authContext)).toBe('google');
+        expect(() => detectProvider(authContext)).toThrow('OpenAI API key is required for unauthenticated users');
       });
 
-    it('should return "google" if only GOOGLE_AI_API_KEY is set', () => {
+    it('should error if only GOOGLE_AI_API_KEY is set', () => {
         delete process.env.OPENAI_API_KEY;
         delete process.env.ANTHROPIC_API_KEY;
         process.env.GOOGLE_AI_API_KEY = 'test-key';
-        expect(detectProvider(authContext)).toBe('google');
+        expect(() => detectProvider(authContext)).toThrow('OpenAI API key is required for unauthenticated users');
     });
 
-    it('should still return "google" even if no keys are set (error occurs on usage)', () => {
+    it('should error if no keys are set', () => {
         delete process.env.OPENAI_API_KEY;
         delete process.env.ANTHROPIC_API_KEY;
         delete process.env.GOOGLE_AI_API_KEY;
         delete process.env.GEMINI_API_KEY;
-        // Unauthenticated users always get 'google' provider returned
-        // The error occurs later when trying to use the provider without a valid key
-        expect(detectProvider(authContext)).toBe('google');
+        expect(() => detectProvider(authContext)).toThrow('OpenAI API key is required for unauthenticated users');
     });
   });
 
